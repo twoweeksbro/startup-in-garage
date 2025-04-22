@@ -1,5 +1,58 @@
 # startup-in-garage
 startup-in-garage
+## 팀원 소개
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/yewon-kim-alt">
+        <img src="https://github.com/yewon-kim-alt.png" width="100px;" alt="yewon-kim-alt"/>
+        <br />
+        <sub><b>김예원</b></sub>
+      </a>
+      <br />
+      역할1<br />
+      역할2<br />
+      역할3
+    </td>
+    <td align="center">
+      <a href="https://github.com/P-fe">
+        <img src="https://github.com/P-fe.png" width="100px;" alt="P-fe"/>
+        <br />
+        <sub><b>신인철</b></sub>
+      </a>
+      <br />
+      역할1<br />
+      역할2<br />
+      역할3
+    </td>
+    <td align="center">
+      <a href="https://github.com/twoweeksbro">
+        <img src="https://github.com/twoweeksbro.png" width="100px;" alt="twoweeksbro"/>
+        <br />
+        <sub><b>이주형</b></sub>
+      </a>
+      <br />
+      역할1<br />
+      역할2<br />
+      역할3
+    </td>
+    <td align="center">
+      <a href="https://github.com/ui-ju">
+        <img src="https://github.com/ui-ju.png" width="100px;" alt="ui-ju"/>
+        <br />
+        <sub><b>정의주</b></sub>
+      </a>
+      <br />
+      역할1<br />
+      역할2</strong><br />
+      역할3
+    </td>
+  </tr>
+</table>
+
+
+
 
 ## 프로젝트 요구사항
 
