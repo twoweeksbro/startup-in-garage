@@ -1,11 +1,203 @@
 ---
 title : 'start-up in garage'
-format : dashboard
+format :
+ dashboard:
+    scrolling: true
 ---
+
+<!-- # {.sidebar}
+
+Sidebar content  -->
+
 
 # EDA & Preprocessing
 
+## Row {height=5%}
+::: {.card title='변수 소개'}
+
+
+# 프로젝트 명
+**"차고 창업에 적합한 부동산 인사이트 대시보드"**
+
+<br>
+
+## 프로젝트 배경
+차고(Garage)는 단순히 차량을 보관하는 공간을 넘어 최근에는 개인 창고, 소규모 창업 공간(목공, 정비, 전자조립 등) 또는 스타트업의 첫 사무실로 활용되는 등 다양한 비즈니스 수요가 증가하고 있다.
+
+Ames Housing 데이터셋은 주택의 다양한 요소를 포함하며 차고(Garage) 관련 정보도 담겨 있다. 이 데이터를 바탕으로 차고 창업에 적합한 주택을 탐색할 수 있는 인사이트를 제공하고자 한다.
+
+<br>
+
+## 프로젝트 목표
+- Ames Housing 데이터를 분석하여 차고 관련 변수와 주택 가치/특성 간의 관계를 파악한다.
+
+- 다양한 조건을 반영해 차고 창업에 적합한 주택의 특징을 도출한다.
+
+- 그 결과를 직관적으로 보여주는 대시보드를 구축한다.
+
+- 사용자가 차고지 조건을 설정하면 창업 적합 주택을 필터링 및 추천할 수 있도록 한다.
+
+<br>
+
+## 세부 분석 항목
+### 1. 차고 관련 변수 탐색
+
+
+- `GarageType`: 차고의 유형 (Detached, Attached, BuiltIn 등)
+
+- `GarageCars`: 차고 차량 수 (공간 크기 대체 가능)
+
+- `GarageArea`: 차고 면적 (창업 가능 최소 공간 설정 가능)
+
+- `GarageFinish`: 내부 마감 수준 (창업 용도 적합도 판단)
+
+- `GarageYrBlt`: 차고 건축년도 (상대적 노후도 평가)
+
+- `GarageQual`: 차고의 품질
+
+- `GarageCond`: 차고의 상태
 
 ```{python}
+import pandas as pd
+
+# ames_df = pd.read_csv('week10/startup-in-garage/data/ames.csv' )
+ames_df = pd.read_csv('./data/ames.csv' )
+
+garage_cols = ['GarageType', 'GarageYrBlt', 'GarageFinish', 'GarageCars','GarageArea', 'GarageQual', 'GarageCond']
 
 ```
+:::
+
+
+
+## Row {width="50%"}
+::: {.card title='결측치 확인'}
+```{python}
+ames_df[garage_cols].isnull().sum()
+
+```
+
+```{python}
+ames_df = ames_df.dropna(subset=garage_cols)
+
+```
+
+
+:::
+
+::: {.card title='변수 시각화'}
+
+```{python}
+#| fig-width: 3
+#| fig-height: 5
+#| fig-align: center
+#| fig-cap: "상관관계 히트맵"
+import matplotlib.pyplot as plt
+import seaborn as sns
+# 상관관계 히트맵
+numeric_columns = ['SalePrice', 'GarageYrBlt', 'GarageCars', 'GarageArea']
+corr_matrix = ames_df[numeric_columns].corr()
+plt.figure(figsize=(5, 3))
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5)
+plt.title('Correlation Heatmap of Garage and Sale Price Variables')
+plt.show()
+```
+
+:::
+
+## Row {height=10%}
+
+::: {.card title='이상치 제거'}
+
+```{python}
+sns.boxplot(ames_df['GarageArea'])
+```
+
+```{python}
+# 이상치 제거
+# GarageArea IQR의해 이상치 제거된 이유 
+Q1 = ames_df['GarageArea'].quantile(0.25)
+Q3 = ames_df['GarageArea'].quantile(0.75)
+IQR = Q3 - Q1
+upper_bound = Q3 + 1.5 * IQR
+
+print(ames_df[ames_df['GarageArea'] > upper_bound].shape[0]) # upper_bound 이상 데이터 56개
+
+
+print(ames_df['SalePrice'].mean()) # 이상치 제거전 평균 saleprice는 181804
+
+print(ames_df[ames_df['GarageArea'] > upper_bound]['SalePrice'].mean())
+# upper_bound 이상 데이터의 saleprice는 303685으로 상당히 비싸다
+
+ames_df = ames_df[ames_df['GarageArea'] < upper_bound]  # 따라서 upper_bound에 해당되는 데이터 제거
+print(ames_df.shape)
+
+
+```
+
+
+:::
+
+
+
+::: {.card title="test"}
+## 위치 기반 GarageArea 시각화
+```{python}
+
+# 전처리 
+# ames_df_clean = ames_df.dropna(subset=garage_cols)
+
+
+import plotly.express as px
+
+# GarageArea
+# Plotly scatter_mapbox 시각화
+fig = px.scatter_mapbox(
+    ames_df,
+    lat="Latitude",
+    lon="Longitude",
+    color="GarageArea",              # 색깔로 집값 표현
+    size="GarageArea",               # 점 크기로도 집값 표현
+    color_continuous_scale= "blues",  # 색상 팔레트
+    size_max=13,
+    zoom=11.5,
+    height=650,
+    width=800,
+    mapbox_style="carto-positron",  # 깔끔한 지도 스타일
+    title="Ames Housing: 위치 기반 집값 시각화"
+)
+
+fig.update_layout(
+
+    mapbox_center={"lat": 42.02601, "lon": -93.63975},
+    margin={"r":0,"t":30,"l":0,"b":0})
+
+# fig.show()
+
+```
+
+:::
+
+## Row {height=10%}
+
+
+###  원하는 차고는 어떤 조건을 만족해야 할까?
+```{python}
+import pandas as pd
+from itables import init_notebook_mode, show
+
+codebook = ames_df.copy()
+components = codebook[garage_cols]
+
+# Initialize the itables mode
+init_notebook_mode(all_interactive=True)
+
+# Display the table with specific container style
+show(components, buttons=['copy', 'excel', 'pdf'], scrollY="1000px", scrollCollapse=True)
+
+```
+
+
+
+## Row {.tabset height="10%"}
+테스트 제발
