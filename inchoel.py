@@ -16,6 +16,45 @@ df['GarageFinish'].isnull().sum()
 df['GarageQual'].isnull().sum()
 df['GarageCond'].isnull().sum()
 
+
+df['GarageArea'].unique()
+df['GarageYrBlt'].unique()
+df['GarageCars'].unique()
+df['GarageType'].unique()
+
+df['GarageFinish'].unique()
+df['GarageQual'].unique()
+df['GarageCond'].unique()
+
+garagefinish_mapping = {
+    'Unf': 1,
+    'RFn': 2,
+    'Fin': 3
+}
+df['GarageFinish_Num'] = df['GarageFinish'].map(garagefinish_mapping)
+
+garagequal_mapping = {
+    'TA': 3,
+    'Fa': 2,
+    'Gd': 4,
+    'Po': 1,
+    'Ex': 5 
+}
+df['GarageQual_Num'] = df['GarageQual'].map(garagequal_mapping)
+
+garagecond_mapping = {
+    'TA': 3,
+    'Fa': 2,
+    'Gd': 4,
+    'Po': 1,
+    'Ex': 5 
+}
+df['GarageCond_Num'] = df['GarageCond'].map(garagecond_mapping)
+
+
+
+
+
 # 결측치 제거
 df = df.dropna(subset=['GarageType', 'GarageFinish','GarageQual','GarageCond'])
 df.shape
@@ -31,10 +70,28 @@ df.columns
 
 
 # 상관관계 히트맵
-numeric_columns = ['SalePrice', 'GarageYrBlt', 'GarageCars', 'GarageArea']
+numeric_columns = ['SalePrice', 'GarageCars', 'GarageArea']
 corr_matrix = df[numeric_columns].corr()
 plt.figure(figsize=(10, 6))
-sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5)
+sns.heatmap(corr_matrix, 
+            annot=True, 
+            cmap='coolwarm',  # 색상 반전: 빨강(양의 상관), 파랑(음의 상관 또는 0)
+            fmt='.2f', 
+            linewidths=0.5, 
+            vmin=-1, vmax=1)  # 색상 고정 범위
+plt.title('Correlation Heatmap of Garage and Sale Price Variables')
+plt.show()
+
+numeric_columns = ['GarageYrBlt', 'GarageCars', 
+                   'GarageArea','GarageFinish_Num','GarageQual_Num','GarageCond_Num']
+corr_matrix = df[numeric_columns].corr()
+plt.figure(figsize=(10, 6))
+sns.heatmap(corr_matrix, 
+            annot=True, 
+            cmap='coolwarm',  # 색상 반전: 빨강(+) 파랑(-)
+            fmt='.2f', 
+            linewidths=0.5, 
+            vmin=-1, vmax=1)  # 색상 범위 고정
 plt.title('Correlation Heatmap of Garage and Sale Price Variables')
 plt.show()
 
@@ -252,25 +309,38 @@ fig.update_layout(
 fig.show()
 
 # GarageCond 갯수
-plt.figure(figsize=(10, 6))
-sns.countplot(data=df, x='GarageCond', order=df['GarageCond'].value_counts().index)
-plt.title('Distribution of Garage Condition')
-plt.xlabel('Garage Condition')
-plt.ylabel('Count')
-plt.show()
-# 도넛차트
+# plt.figure(figsize=(10, 6))
+# sns.countplot(data=df, x='GarageCond', order=df['GarageCond'].value_counts().index)
+# plt.title('Distribution of Garage Condition')
+# plt.xlabel('Garage Condition')
+# plt.ylabel('Count')
+# plt.show()
+# # 도넛차트
+# garagecond_counts = df['GarageCond'].value_counts()
+# plt.figure(figsize=(8, 8))
+# plt.pie(garagecond_counts, 
+#         labels=garagecond_counts.index, 
+#         autopct='%1.1f%%', 
+#         startangle=140,
+#         wedgeprops={'width': 0.4})  # 도넛 형태
+# plt.title('Distribution of Garage Condition (Donut Chart)')
+# plt.axis('equal')  # 원형 유지
+# plt.show()
 garagecond_counts = df['GarageCond'].value_counts()
-plt.figure(figsize=(8, 8))
-plt.pie(garagecond_counts, 
-        labels=garagecond_counts.index, 
-        autopct='%1.1f%%', 
-        startangle=140,
-        wedgeprops={'width': 0.4})  # 도넛 형태
-plt.title('Distribution of Garage Condition (Donut Chart)')
-plt.axis('equal')  # 원형 유지
-plt.show()
-
-
+fig = go.Figure(data=[go.Pie(
+    labels=garagecond_counts.index,
+    values=garagecond_counts.values,
+    hole=0.4,  # 도넛 형태
+    textinfo='percent+label',
+    marker=dict(line=dict(color='white', width=2))
+)])
+fig.update_layout(
+    title='Distribution of Garage Condition (Donut Chart)',
+    showlegend=True,
+    width=700,
+    height=500
+)
+fig.show()
 
 
 
