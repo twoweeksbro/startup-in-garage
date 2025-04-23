@@ -70,6 +70,7 @@ df.columns
 
 
 # 상관관계 히트맵
+# saleprice, garagecar, garagearea
 numeric_columns = ['SalePrice', 'GarageCars', 'GarageArea']
 corr_matrix = df[numeric_columns].corr()
 plt.figure(figsize=(10, 6))
@@ -81,7 +82,7 @@ sns.heatmap(corr_matrix,
             vmin=-1, vmax=1)  # 색상 고정 범위
 plt.title('Correlation Heatmap of Garage and Sale Price Variables')
 plt.show()
-
+# 오직 Garage
 numeric_columns = ['GarageYrBlt', 'GarageCars', 
                    'GarageArea','GarageFinish_Num','GarageQual_Num','GarageCond_Num']
 corr_matrix = df[numeric_columns].corr()
@@ -298,7 +299,8 @@ fig = go.Figure(data=[go.Pie(
     values=garagequal_counts.values,
     hole=0.4,  # 도넛 형태
     textinfo='percent+label',
-    marker=dict(line=dict(color='white', width=2))
+    marker=dict(line=dict(color='white', width=2)),
+    rotation=90
 )])
 fig.update_layout(
     title='Distribution of Garage Quality (Donut Chart)',
@@ -309,12 +311,12 @@ fig.update_layout(
 fig.show()
 
 # GarageCond 갯수
-# plt.figure(figsize=(10, 6))
-# sns.countplot(data=df, x='GarageCond', order=df['GarageCond'].value_counts().index)
-# plt.title('Distribution of Garage Condition')
-# plt.xlabel('Garage Condition')
-# plt.ylabel('Count')
-# plt.show()
+plt.figure(figsize=(10, 6))
+sns.countplot(data=df, x='GarageCond', order=df['GarageCond'].value_counts().index)
+plt.title('Distribution of Garage Condition')
+plt.xlabel('Garage Condition')
+plt.ylabel('Count')
+plt.show()
 # # 도넛차트
 # garagecond_counts = df['GarageCond'].value_counts()
 # plt.figure(figsize=(8, 8))
@@ -332,7 +334,8 @@ fig = go.Figure(data=[go.Pie(
     values=garagecond_counts.values,
     hole=0.4,  # 도넛 형태
     textinfo='percent+label',
-    marker=dict(line=dict(color='white', width=2))
+    marker=dict(line=dict(color='white', width=2)),
+     rotation=90
 )])
 fig.update_layout(
     title='Distribution of Garage Condition (Donut Chart)',
