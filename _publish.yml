@@ -1,0 +1,4 @@
+- source: presentation.qmd
+  quarto-pub:
+    - id: 5d25cfd8-eb1a-4d97-aba7-090d58fc8790
+      url: https://twix.quarto.pub/start-up-in-garage
