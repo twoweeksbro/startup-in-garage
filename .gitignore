@@ -1,0 +1,5 @@
+# 확장자 기준 무시
+*.html
+
+# 폴더 무시
+presentation_files/
