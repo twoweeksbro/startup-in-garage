@@ -154,7 +154,6 @@ fig.update_layout(
     width=900,
     height=500
 )
-
 fig.show()
 
 
@@ -171,7 +170,6 @@ fig = px.line(
     title='Average Number of Garage Cars by Built Year',
     markers=True
 )
-
 fig.update_traces(line=dict(color='green'))  # 선 색깔 설정
 fig.update_layout(
     xaxis_title='Built Year (GarageYrBlt)',
@@ -226,16 +224,18 @@ fig.update_layout(
 fig.show()
 
 # GarageQual 갯수
-garage_counts = df['GarageType'].value_counts().reset_index()
-garage_counts.columns = ['GarageType', 'Count']
+garage_counts = df['GarageQual'].value_counts().reset_index()
+garage_counts.columns = ['GarageQual', 'Count']
 fig = px.pie(
     garage_counts,
-    names='GarageType',
+    names='GarageQual',
     values='Count',
     hole=0.4,
-    title='Distribution of Garage Types (Donut Chart)'
+    title='Distribution of GarageQual (Donut Chart)'
 )
-fig.update_traces(marker=dict(line=dict(color='white', width=2)))
+fig.update_traces(textinfo='percent+label',
+    marker=dict(line=dict(color='white', width=2)),
+                  rotation=90)
 fig.update_layout(
     showlegend=True,
     width=700,
