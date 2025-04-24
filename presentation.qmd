@@ -76,8 +76,7 @@ Ames Housing 데이터셋은 주택의 다양한 요소를 포함하며 차고(G
 
 # 변수 소개
 
-## Row {height=50%}
-
+## Row 
 ::: {.card}
 
 ```{python}
@@ -104,24 +103,7 @@ ames_df[garage_cols].info()
 
 
 ### Test{.tabset}
-#### 결측치 확인
-```{python}
-#| echo: true
-print(ames_df[garage_cols].isnull().sum())
-```
-
-
-#### 결측치 처리
-```{python}
-#| echo: true
-ames_df = ames_df.dropna(subset=garage_cols)
-ames_df.shape
-```
-
-
-### 결측치 처리
-
-:::{.card}
+#### 칼럼 값 의미
 - `GarageType`: 차고의 유형 (Detached, Attached, BuiltIn 등)
 
 - `GarageCars`: 차고 차량 수 (0-5)
@@ -137,24 +119,97 @@ ames_df.shape
 - `GarageCond`: 차고의 상태 (EX, Gd, TA, Fa, Po, NA)
 
 
+
+#### 결측치 확인 및 처리
+```{python}
+#| echo: true
+print(ames_df[garage_cols].isnull().sum())
+
+```
+
+
+<!-- ### 결측치 처리{} -->
+
+:::{.card}
+```{python}
+#| echo: true
+ames_df = ames_df.dropna(subset=garage_cols)
+ames_df.shape
+```
+
+
 :::
 
 
-## Row {height=50%}
-- `GarageType`: 차고의 유형 (Detached, Attached, BuiltIn 등)
 
-- `GarageCars`: 차고 차량 수 (0-5)
 
-- `GarageArea`: 차고 면적 (제곱 피트)
+## Row {.tabset}
+#### GarageArea 이상치 제거
+```{python}
+import seaborn as sns
+import matplotlib.pyplot as plt
 
-- `GarageFinish`: 내부 마감 수준 (Fin RFn, Unf, NA)
+# 사용할 열
+numeric_columns = ['SalePrice', 'GarageCars', 'GarageArea']
+corr_matrix = ames_df[numeric_columns].corr()
 
-- `GarageYrBlt`: 차고 건축년도 ()
+# 그래프 크기와 서브플롯 구성 (1행 2열)
+fig, axes = plt.subplots(1, 2, figsize=(16, 6))
 
-- `GarageQual`: 차고의 품질 (EX, Gd, TA, Fa, Po, NA)
+# [1] 상관관계 히트맵
+sns.heatmap(corr_matrix, 
+            annot=True, 
+            cmap='coolwarm', 
+            fmt='.2f', 
+            linewidths=0.5, 
+            vmin=-1, vmax=1,
+            ax=axes[0])
+_=axes[0].set_title('Correlation Heatmap\nof Garage and Sale Price Variables')
 
-- `GarageCond`: 차고의 상태 (EX, Gd, TA, Fa, Po, NA)
+# [2] 박스플롯
+sns.boxplot(y=ames_df['GarageArea'], ax=axes[1])
+_=axes[1].set_title('Box Plot for Garage Area')
 
+# 레이아웃 조정
+plt.tight_layout()
+plt.show()
+```
+
+
+
+
+## Row
+
+```{python}
+#| echo: true
+
+# GarageArea IQR의해 이상치 제거된 이유 
+Q1 = ames_df['GarageArea'].quantile(0.25)
+Q3 = ames_df['GarageArea'].quantile(0.75)
+IQR = Q3 - Q1
+upper_bound = Q3 + 1.5 * IQR
+
+print(ames_df[ames_df['GarageArea'] > upper_bound].shape[0]) # upper_bound 이상 데이터 56개
+
+
+print(ames_df['SalePrice'].mean()) # 이상치 제거전 평균 saleprice는 181804
+
+print(ames_df[ames_df['GarageArea'] > upper_bound]['SalePrice'].mean())
+# upper_bound 이상 데이터의 saleprice는 303685으로 상당히 비싸다
+
+ames_df = ames_df[ames_df['GarageArea'] < upper_bound]  # 따라서 upper_bound에 해당되는 데이터 제거
+print(ames_df.shape)
+
+```
+
+
+```{python}
+
+_=plt.title('Box Plot for Garage Area')
+sns.boxplot(y=ames_df['GarageArea'])
+
+
+```
 
 
 # EDA & Preprocessing
@@ -181,23 +236,6 @@ plt.show()
 ## Row 
 
 ```{python}
-# 이상치 제거
-# GarageArea IQR의해 이상치 제거된 이유 
-Q1 = ames_df['GarageArea'].quantile(0.25)
-Q3 = ames_df['GarageArea'].quantile(0.75)
-IQR = Q3 - Q1
-upper_bound = Q3 + 1.5 * IQR
-
-print(ames_df[ames_df['GarageArea'] > upper_bound].shape[0]) # upper_bound 이상 데이터 56개
-
-
-print(ames_df['SalePrice'].mean()) # 이상치 제거전 평균 saleprice는 181804
-
-print(ames_df[ames_df['GarageArea'] > upper_bound]['SalePrice'].mean())
-# upper_bound 이상 데이터의 saleprice는 303685으로 상당히 비싸다
-
-ames_df = ames_df[ames_df['GarageArea'] < upper_bound]  # 따라서 upper_bound에 해당되는 데이터 제거
-print(ames_df.shape)
 
 
 ```
@@ -388,7 +426,7 @@ fig = px.line(
     yearly_avg_area_df,
     x='GarageYrBlt',
     y='AvgGarageArea',
-    title='Average Garage Area by Built Year',
+    title='년도별 평균 차고지 면적',
     markers=True
 )
 _=fig.update_traces(line=dict(color='firebrick'))  # 선 색깔 설정
@@ -413,7 +451,7 @@ fig = px.line(
     yearly_avg_df,
     x='GarageYrBlt',
     y='AvgGarageCars',
-    title='Average Number of Garage Cars by Built Year',
+    title='년도별 차고지 차량 대수',
     markers=True
 )
 _=fig.update_traces(line=dict(color='green'))  # 선 색깔 설정
@@ -427,32 +465,6 @@ _=fig.update_layout(
 fig.show()
 ```
 
-
-
-# 히트맵 및 박스플롯
-
-## Row {height=50%}
-
-```{python}
-
-
-import seaborn as sns
-import matplotlib.pyplot as plt
-
-numeric_columns = ['SalePrice', 'GarageCars', 'GarageArea']
-corr_matrix = ames_df[numeric_columns].corr()
-plt.figure(figsize=(10, 6))
-sns.heatmap(corr_matrix, 
-            annot=True, 
-            cmap='coolwarm', 
-            fmt='.2f', 
-            linewidths=0.5, 
-            vmin=-1, vmax=1)
-
-plt.title('Correlation Heatmap of Garage and Sale Price Variables')
-plt.tight_layout()  # 여백 정리
-plt.show()
-```
 
 
 
@@ -626,36 +638,338 @@ _=fig.update_layout(
 fig.show()
 ```
 
+<iframe src="step4_map.html" width="100%" height="600px" style="border:none;"></iframe>
 
 
-```{python}
-
-import plotly.express as px
-
-# GarageArea
-# Plotly scatter_mapbox 시각화
-fig = px.scatter_mapbox(
-    ames_df,
-    lat="Latitude",
-    lon="Longitude",
-    color="GarageCars",              # 색깔로 집값 표현
-    size="GarageCars",               # 점 크기로도 집값 표현
-    color_continuous_scale= "reds",  # 색상 팔레트
-    size_max=13,
-    zoom=11.5,
-    height=650,
-    width=800,
-    mapbox_style="carto-positron",  # 깔끔한 지도 스타일
-    title="Ames Housing: 위치 기반 집값 시각화"
-)
-
-fig.update_layout(
-    dragmode='zoom',        # 또는 'pan'
-    mapbox_center={"lat": 42.02601, "lon": -93.63975},
-    margin={"r":0,"t":30,"l":0,"b":0})
-
-```
 
 
 ## Row {height=50%}
 hi
+
+
+
+
+
+# 회귀모델(페널티 회귀) 학습 및 결과 모델링
+
+
+### Test{.tabset}
+#### 변수선택
+```{python}
+#| echo: false
+#| output: false
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+from sklearn.linear_model import LassoCV
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from statsmodels.formula.api import ols
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+# 데이터 로드 및 전처리
+df = pd.read_csv('./data/ames.csv' )
+
+garagefinish_mapping = {'Unf':1, 'Rfn':2, 'Fin':3}
+garagequal_mapping = {'Po':1, 'Fa':2, 'TA':3, 'Gd':4, 'Ex':5}
+garagecond_mapping = {'Po':1, 'Fa':2, 'TA':3, 'Gd':4, 'Ex':5}
+
+df['GarageFinish_Num'] = df['GarageFinish'].map(garagefinish_mapping)
+df['GarageQual_Num'] = df['GarageQual'].map(garagequal_mapping)
+df['GarageCond_Num'] = df['GarageCond'].map(garagecond_mapping)
+
+df = df.dropna(subset=['GarageType', 'GarageFinish', 'GarageQual', 'GarageCond'])
+
+Q1 = df['GarageArea'].quantile(0.25)
+Q3 = df['GarageArea'].quantile(0.75)
+IQR = Q3 - Q1
+upper_bound = Q3 + 1.5 * IQR
+df = df[df['GarageArea'] < upper_bound]
+
+features = [
+    'GarageYrBlt', 'GarageCars', 'GarageArea', 
+    'GarageFinish_Num', 'GarageQual_Num', 'GarageCond_Num',
+    'LotArea', 'OverallCond', 'OverallQual', 'MSSubClass'
+]
+cat_features = ['GarageType', 'Neighborhood', 'PavedDrive', 'Utilities', 'Street', 'Functional', 'HouseStyle']
+
+for col in cat_features:
+    df[col] = df[col].fillna(df[col].mode()[0])
+for col in features:
+    if df[col].isnull().sum() > 0:
+        df[col] = df[col].fillna(df[col].mean())
+
+
+# Neighborhood 상위 10개만 남기고 나머지는 'Other'로
+top_neigh = df['Neighborhood'].value_counts().index[:10]
+df['Neighborhood_reduced'] = df['Neighborhood'].where(df['Neighborhood'].isin(top_neigh), 'Other')
+
+# cat_features 변수에 Neighborhood_reduced로 교체
+cat_features = ['GarageType', 'Neighborhood_reduced', 'PavedDrive', 'Utilities', 'Street', 'Functional', 'HouseStyle']
+
+# 원-핫 인코딩
+df_encoded = pd.get_dummies(df[cat_features], drop_first=True)
+df_num = df[features]
+df_model = pd.concat([df_num, df_encoded, df['SalePrice']], axis=1).dropna()
+
+
+X = df_model.drop('SalePrice', axis=1)
+y = df_model['SalePrice']
+
+def calculate_vif(df):
+    X_ = df.copy()
+    X_ = X_.assign(const=1)
+    vif_data = pd.DataFrame()
+    vif_data["feature"] = X_.columns
+    vif_data["VIF"] = [variance_inflation_factor(X_.values, i) for i in range(X_.shape[1])]
+    return vif_data.sort_values(by="VIF", ascending=False)
+
+# --- VIF 반복 제거 루프 ---
+X_vif = X.copy()
+X_vif = X_vif.astype(float)
+
+while True:
+    vif_df = calculate_vif(X_vif)
+    print("VIF 상위:\n", vif_df.head(10))
+    high_vif = vif_df[vif_df['VIF'] > 10]['feature'].tolist()
+    # 상수항(const)은 제거하지 않음
+    high_vif = [f for f in high_vif if f != 'const']
+    if not high_vif:
+        print("VIF 10 초과 변수가 없어 다중공선성 문제 없음.")
+        break
+    # 가장 VIF가 높은 변수 하나 제거
+    print(f"VIF가 높은 변수 '{high_vif[0]}'를 제거합니다.")
+    X_vif = X_vif.drop(columns=[high_vif[0]])
+
+# --- Lasso/OLS ---
+X_train, X_test, y_train, y_test = train_test_split(X_vif, y, test_size=0.2, random_state=42)
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+lasso = LassoCV(cv=5, random_state=42)
+lasso.fit(X_train_scaled, y_train)
+
+coef = pd.Series(lasso.coef_, index=X_vif.columns)
+print("선택된 변수 및 계수:")
+print(coef[coef != 0])
+print("테스트 R^2:", lasso.score(X_test_scaled, y_test))
+
+selected_features = coef[coef != 0].index.tolist()
+valid_features = [f for f in selected_features if f in df_model.columns]
+formula = "SalePrice ~ " + "+".join([f"Q('{feature}')" for feature in valid_features])
+
+model = ols(formula, data=df_model).fit()
+print(model.summary())
+
+```
+
+
+
+#### 변수 선택
+| 변수명           | 선택 이유                           |
+|------------------|-------------------------------------------|
+| GarageYrBlt      | 차고 건축 시기로 공간 신선도 판단          |
+| GarageCars       | 주차 가능 차량 수, 공간 규모 파악           |
+| GarageArea       | 차고 면적, 창업 공간 크기 반영         |
+| GarageFinish     | 차고 마감 상태, 공간 쾌적성 및 활용도        |
+| GarageQual       | 차고 품질, 내구성 및 유지관리 용이성         |
+| GarageCond       | 차고 상태, 시설 상태 반영                   |
+| LotArea          | 부지 면적, 확장성 및 주변 공간 평가          |
+| OverallCond      | 주택 전반 상태, 주변 환경 영향               |
+| OverallQual      | 주택 품질, 사업장 이미지 영향                |
+| MSSubClass       | 주택 유형, 공간 특성 파악                    |
+| GarageType     | 차고 종류, 공간 구조 차이                    |
+| Neighborhood  | 입지 특성, 상권 및 지역 환경 평가             |
+| PavedDrive    | 포장 진입로, 접근성 및 물류 편의성             |
+| Utilities     | 유틸리티 상태, 창업 운영 인프라 반영           |
+| Street        | 도로 유형, 접근성 및 교통 편의성               |
+| Functional    | 기능 상태, 공간 및 인근 시설 활용 가능성         |
+| HouseStyle     | 집 스타일, 주변 환경 분위기 반영               |
+
+- 차고 관련 변수 + 창업 관련 의미있어 보이는 변수 추가
+- 새롭게 추가된 범주형 변수들은 특성상 이상치 제거가 불필요
+- 결측치는 범주형 변수의 경우 최빈값으로, 수치형 변수의 경우 평균값으로 대체
+
+#### 히트맵
+```{python}
+#| echo: false
+################
+
+import pandas as pd
+import plotly.graph_objects as go
+
+# VIF 제거 후 사용된 변수 리스트
+used_vars = list(X_vif.columns)
+
+# 변수 그룹 예시 (분석에 사용된 변수 중 대표적으로 묶을 수 있는 그룹)
+variable_groups = {
+    '차고 관련 수치형': [
+        'GarageYrBlt', 'GarageCars', 'GarageArea', 
+        'GarageFinish_Num', 'GarageQual_Num', 'GarageCond_Num'
+    ],
+    '기타 수치형': [
+        'LotArea', 'OverallCond', 'OverallQual', 'MSSubClass'
+    ]
+}
+
+# 실제 존재하는 변수만 필터링
+for key in variable_groups:
+    variable_groups[key] = [v for v in variable_groups[key] if v in used_vars]
+
+# 히트맵 그리기용 함수
+def get_corr_matrix(vars_list):
+    return df_model[vars_list].corr()
+
+# 초기 변수 그룹: 첫 번째 그룹으로 설정
+init_group_name = list(variable_groups.keys())[0]
+init_vars = variable_groups[init_group_name]
+corr_init = get_corr_matrix(init_vars)
+
+# 숫자 표기를 위한 text 생성
+text_init = np.round(corr_init.values, 2).astype(str)
+
+fig = go.Figure(
+    data=go.Heatmap(
+        z=corr_init.values,
+        x=corr_init.columns,
+        y=corr_init.index,
+        colorscale='RdBu',
+        zmin=-1,
+        zmax=1,
+        colorbar=dict(title='Correlation'),
+        text=text_init,  # <-- 숫자 표기
+        texttemplate="%{text}",  # <-- 숫자 표기
+        hovertemplate="상관계수: %{z:.2f}<extra></extra>"
+    )
+)
+
+# 드롭다운 버튼 구성
+buttons = []
+for group_name, vars_list in variable_groups.items():
+    corr = get_corr_matrix(vars_list)
+    text = np.round(corr.values, 2).astype(str)
+    buttons.append(
+        dict(
+            label=group_name,
+            method='update',
+            args=[
+                {'z': [corr.values],
+                 'x': [corr.columns],
+                 'y': [corr.index],
+                 'text': [text],
+                 'texttemplate': "%{text}"},
+                {'title': f'상관관계 히트맵 - {group_name}'}
+            ]
+        )
+    )
+
+fig.update_layout(
+    title=f'설명 변수 상관관계 히트맵 - {init_group_name}',
+    updatemenus=[
+        dict(
+            buttons=buttons,
+            direction='down',
+            pad={'r': 10, 't': 10},
+            showactive=True,
+            x=0,
+            y=1.15,
+            xanchor='left',
+            yanchor='top'
+        )
+    ],
+    width=800,
+    height=800,
+    template='plotly_white'
+)
+
+# fig.show()
+```
+
+- 변수별 상관관계 확인
+
+
+#### 다중공선성 진단
+```{python}
+#| echo: false
+### vif 계산###
+def calculate_vif(df):
+    X_ = df.copy()
+    X_ = X_.assign(const=1)
+    vif_data = pd.DataFrame()
+    vif_data["feature"] = X_.columns
+    vif_data["VIF"] = [variance_inflation_factor(X_.values, i) for i in range(X_.shape[1])]
+    return vif_data.sort_values(by="VIF", ascending=False)
+
+X_vif = X.copy()
+X_vif = X_vif.astype(float)
+
+removed_features = []  # 제거된 변수 저장 리스트
+
+print("=== VIF 반복 제거 과정 ===")
+while True:
+    vif_df = calculate_vif(X_vif)
+    print(vif_df.head(10))  # 상위 10개만 출력
+    high_vif = vif_df[vif_df['VIF'] > 10]['feature'].tolist()
+    high_vif = [f for f in high_vif if f != 'const']
+    if not high_vif:
+        print("VIF 10 초과 변수가 없어 다중공선성 문제 없음.")
+        break
+    feature_to_remove = high_vif[0]
+    print(f"VIF가 높은 변수 '{feature_to_remove}'를 제거합니다.\n")
+    removed_features.append(feature_to_remove)
+    X_vif = X_vif.drop(columns=[feature_to_remove])
+
+print("=== 제거된 변수 목록 ===")
+print(removed_features)
+
+#=== 제거된 변수 목록 ===
+#['GarageType_Attchd', 'Functional_Typ']
+```
+
+- 다중공선성 진단 위해 VIF(분산팽창계수) 계산
+- VIF 높을수록 다중공선성 문제 심각
+- 따라서, 10 이상인 애들 변수에서 제외
+- 제외된 변수 : 'GarageType_Attchd', 'Functional_Typ'
+
+#### Lasso
+```{python}
+#| echo: false
+### 라쏘 계수 막대그래프###
+plt.figure(figsize=(10,8))
+coef.sort_values().plot(kind='barh', color=['red' if c < 0 else 'blue' for c in coef.sort_values()])
+plt.axvline(0, color='black', linewidth=0.8)
+plt.title('Lasso Regression Coefficients')
+plt.xlabel('Coefficient Value')
+plt.show()
+
+# 0인 변수 (제외된 변수)
+excluded_vars = coef[coef == 0]
+print("\n=== Lasso에서 제외된 변수 (계수 == 0) ===")
+print(excluded_vars)
+```
+
+#### OLS
+```{python}
+#| echo: false
+####ols 요약###
+from statsmodels.formula.api import ols
+
+selected_features = coef[coef != 0].index.tolist()
+valid_features = [f for f in selected_features if f in df_model.columns]
+formula = "SalePrice ~ " + "+".join([f"Q('{feature}')" for feature in valid_features])
+
+model = ols(formula, data=df_model).fit()
+print(model.summary())
+```
+
+- 결정계수 0.758로, 모델이 종속변수의 변동성을 잘 설명함
+- F통계량에 대응하는 p-value 값이 0.00으로, 모델 유의함
+
+>> [통계적으로 매우 유의미한 변수 : GarageType_Detchd, Neighborhood_reduced_NridgHt, Neighborhood_reduced_Other, Neighborhood_reduced_Gilbert, HouseStyle_1.5Unf, HouseStyle_2Story, GarageCars, GarageArea, GarageFinish_Num, LotArea, OverallCond, OverallQual, MSSubClass]
+
+- 지역이 NridgHt인 경우 SalePrice가 약 49,500 증가
+- 차고에 주차할 수 있는 차량 수가 1대 증가할 때마다 SalePrice가 약 12,250 증가
+- 차고 면적이 1 평방 피트 증가할 때마다 SalePrice가 약 60 증가
+- 차고 마감 상태가 1 단위 증가할 때마다 SalePrice가 약 8614 증가
