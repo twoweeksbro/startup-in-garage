@@ -10,9 +10,9 @@ format :
 Sidebar content  -->
 
 
-# EDA & Preprocessing
+# 프로젝트 소개
 
-## Row {height=5%}
+## Row 
 ::: {.card title='변수 소개'}
 
 
@@ -57,6 +57,11 @@ Ames Housing 데이터셋은 주택의 다양한 요소를 포함하며 차고(G
 
 - `GarageCond`: 차고의 상태
 
+:::
+
+
+# EDA & Preprocessing
+
 ```{python}
 import pandas as pd
 
@@ -66,11 +71,11 @@ ames_df = pd.read_csv('./data/ames.csv' )
 garage_cols = ['GarageType', 'GarageYrBlt', 'GarageFinish', 'GarageCars','GarageArea', 'GarageQual', 'GarageCond']
 
 ```
-:::
 
 
 
-## Row {width="50%"}
+
+## Row 
 ::: {.card title='결측치 확인'}
 ```{python}
 ames_df[garage_cols].isnull().sum()
@@ -105,13 +110,31 @@ plt.show()
 
 :::
 
-## Row {height=10%}
+## Row 
 
 ::: {.card title='이상치 제거'}
 
 ```{python}
 sns.boxplot(ames_df['GarageArea'])
 ```
+
+
+```{python}
+# 상관관계 히트맵
+# saleprice, garagecar, garagearea
+numeric_columns = ['SalePrice', 'GarageCars', 'GarageArea']
+corr_matrix = ames_df[numeric_columns].corr()
+plt.figure(figsize=(10, 6))
+sns.heatmap(corr_matrix, 
+            annot=True, 
+            cmap='coolwarm',  # 색상 반전: 빨강(양의 상관), 파랑(음의 상관 또는 0)
+            fmt='.2f', 
+            linewidths=0.5, 
+            vmin=-1, vmax=1)  # 색상 고정 범위
+plt.title('Correlation Heatmap of Garage and Sale Price Variables')
+plt.show()
+```
+
 
 ```{python}
 # 이상치 제거
@@ -139,8 +162,9 @@ print(ames_df.shape)
 :::
 
 
+## Row 
 
-::: {.card title="test"}
+<!-- ::: {.card title="test"} -->
 ## 위치 기반 GarageArea 시각화
 ```{python}
 
@@ -176,9 +200,118 @@ fig.update_layout(
 
 ```
 
-:::
+<!-- ::: -->
 
-## Row {height=10%}
+## Row 
+
+
+
+```{python}
+#| results: hide
+garagefinish_counts = ames_df['GarageFinish'].value_counts().reset_index()
+garagefinish_counts.columns = ['GarageFinish', 'Count']
+color_map = {
+    'Unf': '#636EFA',
+    'RFn': '#EF553B',
+    'Fin': '#00CC96'
+}
+fig = px.pie(garagefinish_counts, 
+             names='GarageFinish', 
+             values='Count', 
+             hole=0.4, 
+             title='Distribution of Garage Finish Types')
+fig.update_layout(
+    showlegend=True,
+    legend=dict(
+        orientation="h",   # 범례 가로 정렬
+        yanchor="bottom",
+        # y=-0.2,            # 그래프 아래쪽에 위치
+        xanchor="center",
+        # x=0.5              # 가운데 정렬
+    ),
+    width=500,
+    height=300
+)
+
+# fig.show()
+```
+
+
+```{python}
+# GarageType 갯수
+garage_counts = ames_df['GarageType'].value_counts().reset_index()
+garage_counts.columns = ['GarageType', 'Count']
+fig = px.pie(
+    garage_counts,
+    names='GarageType',
+    values='Count',
+    hole=0.4,
+    title='Distribution of Garage Types (Donut Chart)'
+)
+_=fig.update_traces(
+    textinfo='percent+label',
+    marker=dict(line=dict(color='white', width=2))
+)
+fig.update_layout(
+    showlegend=True,
+    width=500,
+    height=300
+)
+# fig.show()
+```
+
+
+```{python}
+# GarageQual 갯수
+garage_counts = ames_df['GarageQual'].value_counts().reset_index()
+garage_counts.columns = ['GarageQual', 'Count']
+fig = px.pie(
+    garage_counts,
+    names='GarageQual',
+    values='Count',
+    hole=0.4,
+    title='Distribution of GarageQual (Donut Chart)'
+)
+_=fig.update_traces(textinfo='percent+label',
+    marker=dict(line=dict(color='white', width=2)),
+                  rotation=90)
+fig.update_layout(
+    showlegend=True,
+    width=500,
+    height=300
+)
+# fig.show()
+
+```
+
+
+
+```{python}
+# GarageCond 갯수
+garagecond_counts = ames_df['GarageCond'].value_counts().reset_index()
+garagecond_counts.columns = ['GarageCond', 'Count']
+fig = px.pie(
+    garagecond_counts,
+    names='GarageCond',
+    values='Count',
+    hole=0.4,
+    title='Distribution of Garage Condition (Donut Chart)'
+)
+_=fig.update_traces(
+    textinfo='percent+label',
+    marker=dict(line=dict(color='white', width=2)),
+    rotation=90 
+)
+fig.update_layout(
+    showlegend=True,
+    width=500,
+    height=300
+)
+# fig.show()
+
+```
+
+## Row
 
 
 ###  원하는 차고는 어떤 조건을 만족해야 할까?
@@ -187,7 +320,7 @@ import pandas as pd
 from itables import init_notebook_mode, show
 
 codebook = ames_df.copy()
-components = codebook[garage_cols]
+components = codebook[garage_cols+['SalePrice']]
 
 # Initialize the itables mode
 init_notebook_mode(all_interactive=True)
@@ -199,5 +332,211 @@ show(components, buttons=['copy', 'excel', 'pdf'], scrollY="1000px", scrollColla
 
 
 
-## Row {.tabset height="10%"}
-테스트 제발
+# Test
+
+## Row {height=30%}
+
+```{python}
+# GarageType 갯수
+garage_counts = ames_df['GarageType'].value_counts().reset_index()
+garage_counts.columns = ['GarageType', 'Count']
+fig = px.pie(
+    garage_counts,
+    names='GarageType',
+    values='Count',
+    hole=0.4,
+    title='Distribution of Garage Types (Donut Chart)'
+)
+_=fig.update_traces(
+    textinfo='percent+label',
+    marker=dict(line=dict(color='white', width=2))
+)
+fig.update_layout(
+    showlegend=True,
+    width=500,
+    height=300
+)
+# fig.show()
+```
+
+
+```{python}
+# GarageQual 갯수
+garage_counts = ames_df['GarageQual'].value_counts().reset_index()
+garage_counts.columns = ['GarageQual', 'Count']
+fig = px.pie(
+    garage_counts,
+    names='GarageQual',
+    values='Count',
+    hole=0.4,
+    title='Distribution of GarageQual (Donut Chart)'
+)
+_=fig.update_traces(textinfo='percent+label',
+    marker=dict(line=dict(color='white', width=2)),
+                  rotation=90)
+fig.update_layout(
+    showlegend=True,
+    width=500,
+    height=300
+)
+# fig.show()
+
+```
+
+
+
+```{python}
+# GarageCond 갯수
+garagecond_counts = ames_df['GarageCond'].value_counts().reset_index()
+garagecond_counts.columns = ['GarageCond', 'Count']
+fig = px.pie(
+    garagecond_counts,
+    names='GarageCond',
+    values='Count',
+    hole=0.4,
+    title='Distribution of Garage Condition (Donut Chart)'
+)
+_=fig.update_traces(
+    textinfo='percent+label',
+    marker=dict(line=dict(color='white', width=2)),
+    rotation=90 
+)
+fig.update_layout(
+    showlegend=True,
+    width=500,
+    height=300
+)
+# fig.show()
+
+```
+
+
+## Row {height=50%}
+
+
+```{python}
+# Yearbuilt와 GarageArea 관계
+yearly_avg_area = ames_df.groupby('GarageYrBlt')['GarageArea'].mean()
+yearly_avg_area_df = yearly_avg_area.reset_index()
+yearly_avg_area_df.columns = ['GarageYrBlt', 'AvgGarageArea']
+fig = px.line(
+    yearly_avg_area_df,
+    x='GarageYrBlt',
+    y='AvgGarageArea',
+    title='Average Garage Area by Built Year',
+    markers=True
+)
+_=fig.update_traces(line=dict(color='firebrick'))  # 선 색깔 설정
+_=fig.update_layout(
+    xaxis_title='Built Year (GarageYrBlt)',
+    yaxis_title='Average Garage Area (sqft)',
+    template='plotly_white',
+    width=800,
+    height=500
+)
+fig.show()
+```
+
+
+
+```{python}
+# Yearbuilt와 GarageCars의 관계 (평균)
+yearly_avg = ames_df.groupby('GarageYrBlt')['GarageCars'].mean()
+yearly_avg_df = yearly_avg.reset_index()
+yearly_avg_df.columns = ['GarageYrBlt', 'AvgGarageCars']
+fig = px.line(
+    yearly_avg_df,
+    x='GarageYrBlt',
+    y='AvgGarageCars',
+    title='Average Number of Garage Cars by Built Year',
+    markers=True
+)
+_=fig.update_traces(line=dict(color='green'))  # 선 색깔 설정
+_=fig.update_layout(
+    xaxis_title='Built Year (GarageYrBlt)',
+    yaxis_title='Average Garage Cars',
+    template='plotly_white',
+    width=800,
+    height=500
+)
+fig.show()
+```
+
+
+
+## Row {height=50%}
+
+
+```{python}
+# Yearbuilt와 GarageArea 관계
+yearly_avg_area = ames_df.groupby('GarageYrBlt')['GarageArea'].mean()
+yearly_avg_area_df = yearly_avg_area.reset_index()
+yearly_avg_area_df.columns = ['GarageYrBlt', 'AvgGarageArea']
+fig = px.line(
+    yearly_avg_area_df,
+    x='GarageYrBlt',
+    y='AvgGarageArea',
+    title='Average Garage Area by Built Year',
+    markers=True
+)
+_=fig.update_traces(line=dict(color='firebrick'))  # 선 색깔 설정
+_=fig.update_layout(
+    xaxis_title='Built Year (GarageYrBlt)',
+    yaxis_title='Average Garage Area (sqft)',
+    template='plotly_white',
+    width=800,
+    height=500
+)
+fig.show()
+```
+
+
+
+```{python}
+# Yearbuilt와 GarageCars의 관계 (평균)
+yearly_avg = ames_df.groupby('GarageYrBlt')['GarageCars'].mean()
+yearly_avg_df = yearly_avg.reset_index()
+yearly_avg_df.columns = ['GarageYrBlt', 'AvgGarageCars']
+fig = px.line(
+    yearly_avg_df,
+    x='GarageYrBlt',
+    y='AvgGarageCars',
+    title='Average Number of Garage Cars by Built Year',
+    markers=True
+)
+_=fig.update_traces(line=dict(color='green'))  # 선 색깔 설정
+_=fig.update_layout(
+    xaxis_title='Built Year (GarageYrBlt)',
+    yaxis_title='Average Garage Cars',
+    template='plotly_white',
+    width=800,
+    height=500
+)
+fig.show()
+```
+
+
+# 히트맵 및 박스플롯
+
+## Row {height=50%}
+
+```{python}
+
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+numeric_columns = ['SalePrice', 'GarageCars', 'GarageArea']
+corr_matrix = ames_df[numeric_columns].corr()
+plt.figure(figsize=(10, 6))
+sns.heatmap(corr_matrix, 
+            annot=True, 
+            cmap='coolwarm', 
+            fmt='.2f', 
+            linewidths=0.5, 
+            vmin=-1, vmax=1)
+
+plt.title('Correlation Heatmap of Garage and Sale Price Variables')
+plt.tight_layout()  # 여백 정리
+plt.show()
+```
