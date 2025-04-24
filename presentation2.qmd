@@ -1,0 +1,573 @@
+---
+title : 'start-up in garage'
+format :
+ dashboard:
+    scrolling: true
+---
+
+<!-- # {.sidebar}
+
+Sidebar content  -->
+
+
+# 프로젝트 소개
+
+## Row 
+::: {.card title='변수 소개'}
+
+
+# 프로젝트 명
+**"차고 창업에 적합한 부동산 인사이트 대시보드"**
+
+<br>
+
+## 프로젝트 배경
+차고(Garage)는 단순히 차량을 보관하는 공간을 넘어 최근에는 개인 창고, 소규모 창업 공간(목공, 정비, 전자조립 등) 또는 스타트업의 첫 사무실로 활용되는 등 다양한 비즈니스 수요가 증가하고 있다.
+
+Ames Housing 데이터셋은 주택의 다양한 요소를 포함하며 차고(Garage) 관련 정보도 담겨 있다. 이 데이터를 바탕으로 차고 창업에 적합한 주택을 탐색할 수 있는 인사이트를 제공하고자 한다.
+
+<br>
+
+## 프로젝트 목표
+- Ames Housing 데이터를 분석하여 차고 관련 변수와 주택 가치/특성 간의 관계를 파악한다.
+
+- 다양한 조건을 반영해 차고 창업에 적합한 주택의 특징을 도출한다.
+
+- 그 결과를 직관적으로 보여주는 대시보드를 구축한다.
+
+- 사용자가 차고지 조건을 설정하면 창업 적합 주택을 필터링 및 추천할 수 있도록 한다.
+
+<br>
+
+## 세부 분석 항목
+### 1. 차고 관련 변수 탐색
+
+
+- `GarageType`: 차고의 유형 (Detached, Attached, BuiltIn 등)
+
+- `GarageCars`: 차고 차량 수 (공간 크기 대체 가능)
+
+- `GarageArea`: 차고 면적 (창업 가능 최소 공간 설정 가능)
+
+- `GarageFinish`: 내부 마감 수준 (창업 용도 적합도 판단)
+
+- `GarageYrBlt`: 차고 건축년도 (상대적 노후도 평가)
+
+- `GarageQual`: 차고의 품질
+
+- `GarageCond`: 차고의 상태
+
+:::
+
+
+# EDA & Preprocessing
+
+```{python}
+import pandas as pd
+
+# ames_df = pd.read_csv('week10/startup-in-garage/data/ames.csv' )
+ames_df = pd.read_csv('./data/ames.csv' )
+
+garage_cols = ['GarageType', 'GarageYrBlt', 'GarageFinish', 'GarageCars','GarageArea', 'GarageQual', 'GarageCond']
+
+```
+
+
+
+
+## Row 
+
+```{python}
+ames_df[garage_cols].isnull().sum()
+
+```
+
+```{python}
+ames_df = ames_df.dropna(subset=garage_cols)
+
+```
+
+
+
+
+```{python}
+#| fig-width: 3
+#| fig-height: 5
+#| fig-align: center
+#| fig-cap: "상관관계 히트맵"
+import matplotlib.pyplot as plt
+import seaborn as sns
+# 상관관계 히트맵
+numeric_columns = ['SalePrice', 'GarageYrBlt', 'GarageCars', 'GarageArea']
+corr_matrix = ames_df[numeric_columns].corr()
+plt.figure(figsize=(5, 3))
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5)
+plt.title('Correlation Heatmap of Garage and Sale Price Variables')
+plt.show()
+```
+
+
+## Row 
+
+
+
+```{python}
+# 이상치 제거
+# GarageArea IQR의해 이상치 제거된 이유 
+Q1 = ames_df['GarageArea'].quantile(0.25)
+Q3 = ames_df['GarageArea'].quantile(0.75)
+IQR = Q3 - Q1
+upper_bound = Q3 + 1.5 * IQR
+
+print(ames_df[ames_df['GarageArea'] > upper_bound].shape[0]) # upper_bound 이상 데이터 56개
+
+
+print(ames_df['SalePrice'].mean()) # 이상치 제거전 평균 saleprice는 181804
+
+print(ames_df[ames_df['GarageArea'] > upper_bound]['SalePrice'].mean())
+# upper_bound 이상 데이터의 saleprice는 303685으로 상당히 비싸다
+
+ames_df = ames_df[ames_df['GarageArea'] < upper_bound]  # 따라서 upper_bound에 해당되는 데이터 제거
+print(ames_df.shape)
+
+
+```
+
+
+
+
+## Row 
+
+<!-- ::: {.card title="test"} -->
+## 위치 기반 GarageArea 시각화
+```{python}
+
+# 전처리 
+# ames_df_clean = ames_df.dropna(subset=garage_cols)
+
+
+import plotly.express as px
+
+# GarageArea
+# Plotly scatter_mapbox 시각화
+fig = px.scatter_mapbox(
+    ames_df,
+    lat="Latitude",
+    lon="Longitude",
+    color="GarageArea",              # 색깔로 집값 표현
+    size="GarageArea",               # 점 크기로도 집값 표현
+    color_continuous_scale= "blues",  # 색상 팔레트
+    size_max=13,
+    zoom=11.5,
+    height=650,
+    width=800,
+    mapbox_style="carto-positron",  # 깔끔한 지도 스타일
+    title="Ames Housing: 위치 기반 집값 시각화"
+)
+
+fig.update_layout(
+
+    mapbox_center={"lat": 42.02601, "lon": -93.63975},
+    margin={"r":0,"t":30,"l":0,"b":0})
+
+# fig.show()
+
+```
+
+<!-- ::: -->
+
+
+## Row
+
+
+###  원하는 차고는 어떤 조건을 만족해야 할까?
+```{python}
+import pandas as pd
+from itables import init_notebook_mode, show
+
+codebook = ames_df.copy()
+components = codebook[garage_cols+['SalePrice']]
+
+# Initialize the itables mode
+init_notebook_mode(all_interactive=True)
+
+# Display the table with specific container style
+show(components, buttons=['copy', 'excel', 'pdf'], scrollY="1000px", scrollCollapse=True)
+
+```
+
+
+
+# Test
+
+## Row {height=30%}
+
+```{python}
+# GarageType 갯수
+garage_counts = ames_df['GarageType'].value_counts().reset_index()
+garage_counts.columns = ['GarageType', 'Count']
+fig = px.pie(
+    garage_counts,
+    names='GarageType',
+    values='Count',
+    hole=0.4,
+    title='Distribution of Garage Types (Donut Chart)'
+)
+_=fig.update_traces(
+    textinfo='percent+label',
+    marker=dict(line=dict(color='white', width=2))
+)
+_=fig.update_layout(
+    showlegend=True,
+    width=700,
+    height=500
+)
+fig.show()
+```
+
+
+
+```{python}
+# GarageFinish 갯수 (고정)
+garagefinish_counts = ames_df['GarageFinish'].value_counts().reset_index()
+garagefinish_counts.columns = ['GarageFinish', 'Count']
+color_map = {
+    'Unf': '#636EFA',
+    'RFn': '#EF553B',
+    'Fin': '#00CC96'
+}
+fig = px.pie(garagefinish_counts, 
+             names='GarageFinish', 
+             values='Count', 
+             hole=0.4, 
+             title='Distribution of Garage Finish Types')
+_=fig.update_layout(
+    showlegend=True,
+    width=700,
+    height=500
+)
+fig.show()
+```
+
+
+
+## Row {height=30%}
+
+
+```{python}
+# GarageQual 갯수
+garage_counts = ames_df['GarageQual'].value_counts().reset_index()
+garage_counts.columns = ['GarageQual', 'Count']
+fig = px.pie(
+    garage_counts,
+    names='GarageQual',
+    values='Count',
+    hole=0.4,
+    title='Distribution of GarageQual (Donut Chart)'
+)
+_=fig.update_traces(textinfo='percent+label',
+    marker=dict(line=dict(color='white', width=2)),
+                  rotation=90)
+_=fig.update_layout(
+    showlegend=True,
+    width=700,
+    height=500
+)
+fig.show()
+
+```
+ 
+
+
+```{python}
+# GarageCond 갯수
+garagecond_counts = ames_df['GarageCond'].value_counts().reset_index()
+garagecond_counts.columns = ['GarageCond', 'Count']
+fig = px.pie(
+    garagecond_counts,
+    names='GarageCond',
+    values='Count',
+    hole=0.4,
+    title='Distribution of Garage Condition (Donut Chart)'
+)
+_=fig.update_traces(
+    textinfo='percent+label',
+    marker=dict(line=dict(color='white', width=2)),
+    rotation=90 
+)
+_=fig.update_layout(
+    showlegend=True,
+    width=700,
+    height=500
+)
+fig.show()
+
+```
+
+
+
+
+
+## Row {height=40%}
+
+
+```{python}
+# Yearbuilt와 GarageArea 관계
+yearly_avg_area = ames_df.groupby('GarageYrBlt')['GarageArea'].mean()
+yearly_avg_area_df = yearly_avg_area.reset_index()
+yearly_avg_area_df.columns = ['GarageYrBlt', 'AvgGarageArea']
+fig = px.line(
+    yearly_avg_area_df,
+    x='GarageYrBlt',
+    y='AvgGarageArea',
+    title='Average Garage Area by Built Year',
+    markers=True
+)
+_=fig.update_traces(line=dict(color='firebrick'))  # 선 색깔 설정
+_=fig.update_layout(
+    xaxis_title='Built Year (GarageYrBlt)',
+    yaxis_title='Average Garage Area (sqft)',
+    template='plotly_white',
+    width=800,
+    height=500
+)
+fig.show()
+```
+
+
+
+```{python}
+# Yearbuilt와 GarageCars의 관계 (평균)
+yearly_avg = ames_df.groupby('GarageYrBlt')['GarageCars'].mean()
+yearly_avg_df = yearly_avg.reset_index()
+yearly_avg_df.columns = ['GarageYrBlt', 'AvgGarageCars']
+fig = px.line(
+    yearly_avg_df,
+    x='GarageYrBlt',
+    y='AvgGarageCars',
+    title='Average Number of Garage Cars by Built Year',
+    markers=True
+)
+_=fig.update_traces(line=dict(color='green'))  # 선 색깔 설정
+_=fig.update_layout(
+    xaxis_title='Built Year (GarageYrBlt)',
+    yaxis_title='Average Garage Cars',
+    template='plotly_white',
+    width=800,
+    height=500
+)
+fig.show()
+```
+
+
+
+# 히트맵 및 박스플롯
+
+## Row {height=50%}
+
+```{python}
+
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+numeric_columns = ['SalePrice', 'GarageCars', 'GarageArea']
+corr_matrix = ames_df[numeric_columns].corr()
+plt.figure(figsize=(10, 6))
+sns.heatmap(corr_matrix, 
+            annot=True, 
+            cmap='coolwarm', 
+            fmt='.2f', 
+            linewidths=0.5, 
+            vmin=-1, vmax=1)
+
+plt.title('Correlation Heatmap of Garage and Sale Price Variables')
+plt.tight_layout()  # 여백 정리
+plt.show()
+```
+
+
+
+# 지도 시각화
+
+## Row {height =50%}
+<!-- row1 -->
+
+::: {card}
+
+<iframe src="garage_map.html" width="100%" height="600px" style="border:none;"></iframe>
+
+:::
+
+
+```{python}
+import plotly.express as px
+
+# GarageArea
+# Plotly scatter_mapbox 시각화
+fig = px.scatter_mapbox(
+    ames_df,
+    lat="Latitude",
+    lon="Longitude",
+    color="GarageArea",              # 색깔로 집값 표현
+    size="GarageArea",               # 점 크기로도 집값 표현
+    color_continuous_scale= "blues",  # 색상 팔레트
+    size_max=13,
+    zoom=11.5,
+    height=650,
+    width=800,
+    mapbox_style="carto-positron",  # 깔끔한 지도 스타일
+    title="Ames Housing: 위치 기반 집값 시각화"
+)
+
+fig.update_layout(
+
+    mapbox_center={"lat": 42.02601, "lon": -93.63975},
+    margin={"r":0,"t":30,"l":0,"b":0})
+
+# fig.show()
+
+```
+
+## Row {height =50%}
+
+```{python}
+
+import plotly.express as px
+
+# GarageArea
+# Plotly scatter_mapbox 시각화
+fig = px.scatter_mapbox(
+    ames_df,
+    lat="Latitude",
+    lon="Longitude",
+    color="GarageCars",              # 색깔로 집값 표현
+    size="GarageCars",               # 점 크기로도 집값 표현
+    color_continuous_scale= "reds",  # 색상 팔레트
+    size_max=13,
+    zoom=11.5,
+    height=650,
+    width=800,
+    mapbox_style="carto-positron",  # 깔끔한 지도 스타일
+    title="Ames Housing: 위치 기반 집값 시각화"
+)
+
+fig.update_layout(
+    dragmode='zoom',        # 또는 'pan'
+    mapbox_center={"lat": 42.02601, "lon": -93.63975},
+    margin={"r":0,"t":30,"l":0,"b":0})
+
+```
+
+row2
+
+
+
+## Row 
+
+# dropdown
+
+```{python}
+import plotly.express as px
+import plotly.graph_objects as go
+import pandas as pd
+
+# 고정 크기용 가짜 size
+ames_df['UniformSize'] = 10
+
+# 사용할 컬럼 리스트
+category_cols = ['GarageQual', 'GarageCond']
+default_col = category_cols[0]
+
+# 파란색 계열로 색상 지정 (연한 파랑 → 진한 파랑)
+blue_gradient = ['#90caf9', '#64b5f6', '#2196f3', '#1e3a8a', '#00008b']
+qual_order = ['Po', 'Fa', 'TA', 'Gd', 'Ex']  # 순서대로 설정
+
+# color_map을 이용하여 색상 맵핑
+color_map = dict(zip(qual_order, blue_gradient))
+
+# 공통 fig 설정 (layout만 먼저 지정)
+fig = go.Figure()
+
+# 초기 trace 추가
+initial_trace = px.scatter_mapbox(
+    ames_df,
+    lat="Latitude",
+    lon="Longitude",
+    color=default_col,
+    hover_data=["SalePrice", default_col],
+    size="UniformSize",
+    size_max=11,
+    zoom=12,
+    mapbox_style="carto-positron",
+    category_orders={default_col: qual_order},  # 순서 지정
+    color_discrete_map=color_map               # 색상 매핑 적용
+)
+
+# fig에 첫 trace 복사
+for trace in initial_trace.data:
+    fig.add_trace(trace)
+
+# layout 복사
+_=fig.update_layout(initial_trace.layout)
+
+# 중심 및 사이즈 고정
+_=fig.update_layout(
+    mapbox_center={"lat": 42.02601, "lon": -93.63975},
+    height=700,
+    width=1000,
+    margin={"r": 0, "t": 50, "l": 0, "b": 0},
+    title=f"🏠 {default_col} 별 주택 위치 시각화"
+)
+
+# dropdown을 위한 버튼 생성
+dropdown_buttons = []
+for col in category_cols:
+    temp_fig = px.scatter_mapbox(
+        ames_df,
+        lat="Latitude",
+        lon="Longitude",
+        color=col,
+        hover_data=["SalePrice", col],
+        size="UniformSize",
+        size_max=11,
+        zoom=12,
+        mapbox_style="carto-positron",
+        category_orders={col: qual_order},  # 순서 지정
+        color_discrete_map=color_map         # 색상 매핑 적용
+    )
+
+    # button: trace 교체
+    button = dict(
+        label=col,
+        method="update",
+        args=[
+            {'lat': [trace.lat for trace in temp_fig.data],
+             'lon': [trace.lon for trace in temp_fig.data],
+             'marker': [trace.marker for trace in temp_fig.data],
+             'hovertext': [trace.hovertext for trace in temp_fig.data],
+             'customdata': [trace.customdata for trace in temp_fig.data],
+             'name': [trace.name for trace in temp_fig.data]},
+            {'title': f"🏠 {col} 별 주택 위치 시각화"}
+        ]
+    )
+    dropdown_buttons.append(button)
+
+# 버튼 추가
+_=fig.update_layout(
+    updatemenus=[
+        dict(
+            buttons=dropdown_buttons,
+            direction='down',
+            showactive=True,
+            x=0.01,
+            y=1.05,
+            xanchor='left',
+            yanchor='top'
+        )
+    ]
+)
+
+fig.show()
+
+```

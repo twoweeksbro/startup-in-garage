@@ -6,7 +6,7 @@ import plotly.express as px
 df = pd.read_csv('ames.csv')
 df.columns
 df.isnull().sum()
-
+df.shape
 # 결측치 발견
 df['GarageArea'].isnull().sum()
 df['GarageYrBlt'].isnull().sum()
@@ -29,7 +29,7 @@ df['GarageCond'].unique()
 
 garagefinish_mapping = {
     'Unf': 1,
-    'Rfn': 2,
+    'RFn': 2,
     'Fin': 3
 }
 df['GarageFinish_Num'] = df['GarageFinish'].map(garagefinish_mapping)
@@ -158,8 +158,8 @@ fig.show()
 
 
 
-
 # Yearbuilt와 GarageCars의 관계 (평균)
+# 이미지 파일 경로
 yearly_avg = df.groupby('GarageYrBlt')['GarageCars'].mean()
 yearly_avg_df = yearly_avg.reset_index()
 yearly_avg_df.columns = ['GarageYrBlt', 'AvgGarageCars']
@@ -179,6 +179,11 @@ fig.update_layout(
     height=500
 )
 fig.show()
+
+
+
+
+
 
 # GarageFinish 갯수 (고정)
 garagefinish_counts = df['GarageFinish'].value_counts().reset_index()
@@ -216,7 +221,7 @@ fig.update_traces(
     textinfo='percent+label',
     marker=dict(line=dict(color='white', width=2))
 )
-fig.update_layout(
+fig.update_layout( 
     showlegend=True,
     width=700,
     height=500
@@ -263,4 +268,70 @@ fig.update_layout(
     width=700,
     height=500
 )
+fig.show()
+
+#################
+
+import pandas as pd
+import plotly.graph_objects as go
+from palmerpenguins import load_penguins
+# 데이터 로딩 및 전처리
+af = load_penguins().dropna()
+# total_count = len(af)
+# 단계별 필터링
+# step1 = af
+# step2 = step1[step1['body_mass_g'] > 3000]
+# step3 = step2[step2['flipper_length_mm'] > 190]
+# step4 = step3[step3['bill_length_mm'] > 45]
+df['GarageFinish_Num'].unique()
+
+total_count = len(df)
+step1 = df
+step2 = step1[step1['GarageQual_Num'] >= 3]
+step3 = step2[step2['GarageFinish_Num'] >= 2]
+step4 = step3[step3['GarageArea'] > 576]
+step4.shape
+# 각 단계별 개체 수
+step_counts = [len(step1), len(step2), len(step3), len(step4)]
+# y축 라벨 (단계 + 조건 설명)
+step_labels = [
+    "1단계: 전체 차고지 수",
+    "2단계: 차고지 퀄리티 평균 이상",
+    "3단계: 차고지 마감 상태 평균 이상",
+    "4단계: 차고지 면적 576이상"
+]
+# 퍼널 내부 텍스트 (마리 수 + 전체 비율)
+text_labels = [
+    f"{count}개 ({count / total_count * 100:.1f}%)"
+    for count in step_counts
+]
+
+# 막대 색상 리스트 (단계별 색상)
+colors =["#A3C9F1", "#D1A6E0", "#A4E6B2", "#4C6A92"]
+
+# 퍼널 그래프 생성
+fig = go.Figure(go.Funnel(
+    y=step_labels,
+    x=step_counts,
+    text=text_labels,
+    textinfo="text",
+    textposition="inside",
+    textfont=dict(size=16, family="Arial", weight="bold"),
+    marker=dict(color=colors)  # 색상 적용
+))
+
+# 레이아웃 설정
+fig.update_layout(
+    title={
+        "text": "단계별 조건을 만족하는 차고지 개체 수",
+        "x": 0.5,
+        "xanchor": "center",
+        "font": dict(size=24)
+    },
+    paper_bgcolor='white',   # 전체 배경 흰색
+    plot_bgcolor='white',     # 플롯 영역 배경 흰색
+    margin=dict(t=80, l=100, r=50, b=80),
+    font=dict(size=16, family="Arial")
+)
+
 fig.show()
