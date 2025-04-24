@@ -271,3 +271,36 @@ fig.update_layout(
 )
 
 fig.show()
+
+
+print(df['Neighborhood_reduced'].unique())
+print(pd.get_dummies(df['Neighborhood_reduced'], drop_first=True).columns)
+
+
+
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# 관심 변수 리스트
+vars_of_interest = ['GarageArea', 'GarageCars', 'OverallQual', 'OverallCond']
+
+# 상관행렬 계산
+corr_matrix = df_model[vars_of_interest].corr()
+
+# 히트맵 시각화
+plt.figure(figsize=(6, 5))
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', vmin=-1, vmax=1)
+plt.title('상관관계 히트맵: 차고 면적, 주차 가능 대수, 주택 품질 및 전체 상태')
+plt.show()
+
+
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(8,6))
+plt.scatter(df_model['OverallCond'], df_model['OverallQual'], alpha=0.6, edgecolor='k')
+plt.xlabel('OverallCond (전체 상태)')
+plt.ylabel('OverallQual (주택 품질)')
+plt.title('OverallCond와 OverallQual 간 산점도')
+plt.grid(True)
+plt.show()
