@@ -205,3 +205,180 @@ fig.update_layout(
 
 fig.show()
 
+
+
+
+# folium 버전
+
+ames_df = ames_df.dropna(subset=garage_cols)
+
+
+
+# 이상치 제거
+# GarageArea IQR의해 이상치 제거된 이유 
+Q1 = ames_df['GarageArea'].quantile(0.25)
+Q3 = ames_df['GarageArea'].quantile(0.75)
+IQR = Q3 - Q1
+upper_bound = Q3 + 1.5 * IQR
+ames_df['GarageArea'].shape   # 기존 2450
+ames_df[ames_df['GarageArea'] > upper_bound].shape[0] # upper_bound 이상 데이터 56개
+
+ames_df['SalePrice'].mean() # 이상치 제거전 평균 saleprice는 181804
+ames_df[(ames_df['GarageArea'] > Q1) & (ames_df['GarageArea'] < Q3)]['SalePrice'].mean()
+# 1사분위 3사분위내에서 saleprice는 177024
+
+ames_df[ames_df['GarageArea'] > upper_bound]['SalePrice'].mean()  
+# upper_bound 이상 데이터의 saleprice는 303685으로 상당히 비싸다
+ames_df = ames_df[ames_df['GarageArea'] < upper_bound]  # 따라서 upper_bound에 해당되는 데이터 제거
+
+
+
+
+
+
+
+import folium
+import pandas as pd
+from IPython.display import display
+
+# 중심 좌표
+center_lat, center_lon = 42.02601, -93.63975
+
+# folium 지도 생성
+m = folium.Map(location=[center_lat, center_lon], zoom_start=12.5, tiles='CartoDB positron',
+               width=900,height=700)
+
+# 컬러 매핑 함수
+def color_scale(value, max_val):
+    scale = int(255 * value / max_val)
+    return f'#{scale:02x}{scale:02x}ff'  # 파란색 계열
+
+# 최대 GarageArea 계산
+max_area = ames_df['GarageArea'].max()
+
+# 마커 추가
+for _, row in ames_df.iterrows():
+    lat, lon, area = row['Latitude'], row['Longitude'], row['GarageArea']
+    
+    if pd.notnull(lat) and pd.notnull(lon) and pd.notnull(area):
+        folium.CircleMarker(
+            location=[lat, lon],
+            radius=area / 50,
+            color=color_scale(area, max_area),
+            fill=True,
+            fill_color=color_scale(area, max_area),
+            fill_opacity=0.6,
+            popup=f"GarageArea: {area} sqft<br>SalePrice: ${row['SalePrice']:,.0f}"
+        ).add_to(m)
+
+# ▶ 범례 HTML 삽입
+legend_html = '''
+<div style="
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 9999;
+    background-color: white;
+    padding: 10px 15px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+">
+    <b>Garage Area Legend</b><br>
+    <i style="background: #0000ff; width: 12px; height: 12px; display: inline-block;"></i> Small<br>
+    <i style="background: #7f7fff; width: 12px; height: 12px; display: inline-block;"></i> Medium<br>
+    <i style="background: #ffff; width: 12px; height: 12px; display: inline-block;"></i> Large
+</div>
+'''
+m.get_root().html.add_child(folium.Element(legend_html))
+
+# ▶ 타이틀 삽입 (HTML)
+title_html = '''
+<h3 align="center" style="font-size:20px"><b>Ames Housing - Garage Area Map</b></h3>
+'''
+m.get_root().html.add_child(folium.Element(title_html))
+
+# 저장 및 표시
+m.save('garage_map.html')
+display(m)
+
+import os
+
+
+
+import folium
+from folium.plugins import MarkerCluster
+import pandas as pd
+
+# 중심 좌표
+center_lat, center_lon = 42.02601, -93.63975
+
+# folium 지도 생성
+m = folium.Map(
+    location=[center_lat, center_lon],
+    zoom_start=12.5,
+    tiles='cartodbpositron',
+    width=900,
+    height=700
+)
+
+# 마커 클러스터 추가
+marker_cluster = MarkerCluster().add_to(m)
+
+# 컬러 매핑 함수 (작을수록 밝은 파랑, 클수록 진한 파랑)
+def color_scale(value, max_val):
+    scale = int(255 * value / max_val)
+    return f'#{scale:02x}{scale:02x}ff'
+
+# 최대 GarageArea 계산
+max_area = ames_df['GarageArea'].max()
+
+# 마커 반복 추가
+for _, row in ames_df.iterrows():
+    lat, lon, area = row['Latitude'], row['Longitude'], row['GarageArea']
+
+    if pd.notnull(lat) and pd.notnull(lon) and pd.notnull(area):
+        folium.CircleMarker(
+            location=[lat, lon],
+            radius=area / 50,
+            color=color_scale(area, max_area),
+            fill=True,
+            fill_color=color_scale(area, max_area),
+            fill_opacity=0.6,
+            popup=folium.Popup(
+                f"<b>GarageArea:</b> {area} sqft<br><b>SalePrice:</b> ${row['SalePrice']:,.0f}",
+                max_width=300
+            )
+        ).add_to(marker_cluster)
+
+# ▶ 범례 HTML 삽입
+legend_html = '''
+<div style="
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 9999;
+    background-color: white;
+    padding: 10px 15px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+">
+    <b>Garage Area Legend</b><br>
+    <i style="background: #d0d0ff; width: 12px; height: 12px; display: inline-block;"></i> Small<br>
+    <i style="background: #7f7fff; width: 12px; height: 12px; display: inline-block;"></i> Medium<br>
+    <i style="background: #0000ff; width: 12px; height: 12px; display: inline-block;"></i> Large
+</div>
+'''
+m.get_root().html.add_child(folium.Element(legend_html))
+
+# ▶ 타이틀 삽입 (HTML)
+title_html = '''
+<h3 align="center" style="font-size:20px"><b>Ames Housing - Garage Area Map</b></h3>
+'''
+m.get_root().html.add_child(folium.Element(title_html))
+
+# 저장 및 렌더링
+m.save('garage_map.html')
