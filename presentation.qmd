@@ -3,6 +3,7 @@ title : 'start-up in garage'
 format :
  dashboard:
     scrolling: true
+
 ---
 
 <!-- # {.sidebar}
@@ -13,8 +14,13 @@ Sidebar content  -->
 # 프로젝트 소개
 
 ## Row 
-::: {.card title='변수 소개'}
+::: {.card title='프로젝트 소개'}
 
+<div style="text-align: center;">
+  <img src="/static/images/apple.png" alt="Apple" style="margin: 50px;">
+  <img src="/static/images/amazon.png" alt="Amazon" style="margin: 50px;">
+  <img src="/static/images/google.png" alt="Google" style="margin: 50px;">
+</div>
 
 # 프로젝트 명
 **"차고 창업에 적합한 부동산 인사이트 대시보드"**
@@ -27,6 +33,15 @@ Sidebar content  -->
 Ames Housing 데이터셋은 주택의 다양한 요소를 포함하며 차고(Garage) 관련 정보도 담겨 있다. 이 데이터를 바탕으로 차고 창업에 적합한 주택을 탐색할 수 있는 인사이트를 제공하고자 한다.
 
 <br>
+
+
+<div style="text-align: center;">
+  <img src="/static/images/whereitstarted.jpg" alt="Amazon" style="margin: 50px;" width="600" height="500">
+  <img src="/static/images/garage_startup.png" alt="Apple" style="margin: 50px;" width="600" height="500">
+</div>
+
+
+
 
 ## 프로젝트 목표
 - Ames Housing 데이터를 분석하여 차고 관련 변수와 주택 가치/특성 간의 관계를 파악한다.
@@ -58,6 +73,65 @@ Ames Housing 데이터셋은 주택의 다양한 요소를 포함하며 차고(G
 - `GarageCond`: 차고의 상태
 
 :::
+
+# 변수 소개
+
+## Row {height=50%}
+
+::: {.card}
+
+```{python}
+import pandas as pd
+
+# ames_df = pd.read_csv('week10/startup-in-garage/data/ames.csv' )
+ames_df = pd.read_csv('./data/ames.csv' )
+
+garage_cols = ['GarageType', 'GarageYrBlt', 'GarageFinish', 'GarageCars','GarageArea', 'GarageQual', 'GarageCond']
+ames_df[garage_cols].info()
+```
+
+:::
+
+- `GarageType`: 차고의 유형 (Detached, Attached, BuiltIn 등)
+
+- `GarageCars`: 차고 차량 수 (0-5)
+
+- `GarageArea`: 차고 면적 (제곱 피트)
+
+- `GarageFinish`: 내부 마감 수준 (Fin RFn, Unf, NA)
+
+- `GarageYrBlt`: 차고 건축년도 ()
+
+- `GarageQual`: 차고의 품질 (EX, Gd, TA, Fa, Po, NA)
+
+- `GarageCond`: 차고의 상태 (EX, Gd, TA, Fa, Po, NA)
+
+
+:::{.card}
+- `GarageType`: 차고의 유형 (Detached, Attached, BuiltIn 등)
+
+- `GarageCars`: 차고 차량 수 (0-5)
+
+- `GarageArea`: 차고 면적 (제곱 피트)
+
+- `GarageFinish`: 내부 마감 수준 (창업 용도 적합도 판단)
+
+- `GarageYrBlt`: 차고 건축년도 (상대적 노후도 평가)
+
+- `GarageQual`: 차고의 품질 (EX, Gd, TA, Fa, Po, NA)
+
+- `GarageCond`: 차고의 상태 (EX, Gd, TA, Fa, Po, NA)
+
+
+:::
+
+
+## Row {height=50%}
+hi
+
+
+test
+
 
 
 # EDA & Preprocessing
@@ -497,7 +571,7 @@ initial_trace = px.scatter_mapbox(
 
 # fig에 첫 trace 복사
 for trace in initial_trace.data:
-    fig.add_trace(trace)
+    _=fig.add_trace(trace)
 
 # layout 복사
 _=fig.update_layout(initial_trace.layout)

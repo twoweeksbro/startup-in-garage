@@ -9,6 +9,8 @@ ames_df = pd.read_csv('week10/startup-in-garage/data/ames.csv')
 garage_cols = ['GarageType', 'GarageYrBlt', 'GarageFinish', 'GarageCars',
                 'GarageArea', 'GarageQual', 'GarageCond']
 
+ames_df[garage_cols].info()
+
 # 결측치 확인
 ames_df[garage_cols].isnull().sum()
 
