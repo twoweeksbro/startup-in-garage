@@ -95,7 +95,7 @@ garage_cols = ['GarageType', 'GarageYrBlt', 'GarageFinish', 'GarageCars','Garage
 
 ```{python}
 #| echo: true
-
+garage_cols = ['GarageType', 'GarageYrBlt', 'GarageFinish', 'GarageCars','GarageArea', 'GarageQual', 'GarageCond']
 ames_df[garage_cols].info()
 ```
 
@@ -104,28 +104,22 @@ ames_df[garage_cols].info()
 
 
 ### Test{.tabset}
-#### 탭1
+#### 결측치 확인
 ```{python}
 #| echo: true
 print(ames_df[garage_cols].isnull().sum())
 ```
 
 
-#### 탭2
+#### 결측치 처리
 ```{python}
 #| echo: true
-print(ames_df[garage_cols].isnull().sum())
+ames_df = ames_df.dropna(subset=garage_cols)
+ames_df.shape
 ```
 
 
 ### 결측치 처리
-
-```{python}
-#| echo: true
-
-ames_df = ames_df.dropna(subset=garage_cols)
-ames_df.shape
-```
 
 :::{.card}
 - `GarageType`: 차고의 유형 (Detached, Attached, BuiltIn 등)
@@ -165,25 +159,6 @@ ames_df.shape
 
 # EDA & Preprocessing
 
-```{python}
-import pandas as pd
-
-# ames_df = pd.read_csv('week10/startup-in-garage/data/ames.csv' )
-
-```
-
-
-
-
-## Row 
-
-```{python}
-ames_df[garage_cols].isnull().sum()
-
-```
-
-
-
 
 
 ```{python}
@@ -204,8 +179,6 @@ plt.show()
 
 
 ## Row 
-
-
 
 ```{python}
 # 이상치 제거
@@ -228,7 +201,6 @@ print(ames_df.shape)
 
 
 ```
-
 
 
 
