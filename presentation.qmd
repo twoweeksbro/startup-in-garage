@@ -216,7 +216,7 @@ sns.boxplot(y=ames_df['GarageArea'])
 
 
 
-# 차고지 변수 히트맵
+# EDA 1 (차고지 변수 히트맵)
 
 ## Row 
 
@@ -284,25 +284,12 @@ import plotly.express as px
 ## Row
 
 
-###  원하는 차고는 어떤 조건을 만족해야 할까?
-```{python}
-import pandas as pd
-from itables import show
-
-codebook = ames_df.copy()
-components = codebook[garage_cols+['SalePrice']]
-
-# Initialize the itables mode
-# init_notebook_mode(all_interactive=True)
-
-# Display the table with specific container style
-show(components, buttons=['copy', 'excel', 'pdf'], scrollY="1000px", scrollCollapse=True)
-
-```
+<!-- ###  원하는 차고는 어떤 조건을 만족해야 할까? -->
 
 
 
-# Test
+# EDA 2 (시각화)
+
 
 ## Row {height=30%}
 
@@ -473,7 +460,39 @@ fig.show()
 
 ::: {card}
 
-<iframe src="garage_map.html" width="100%" height="600px" style="border:none;"></iframe>
+<!-- <iframe src="garage_map.html" width="100%" height="600px" style="border:none;"></iframe> -->
+
+```{python}
+import plotly.express as px
+
+# GarageArea
+# Plotly scatter_mapbox 시각화
+fig = px.scatter_mapbox(
+    ames_df,
+    lat="Latitude",
+    lon="Longitude",
+    color="GarageCars",              # 색깔로 집값 표현
+    size="GarageCars",               # 점 크기로도 집값 표현
+    color_continuous_scale= "Greens",  # 색상 팔레트
+    size_max=13,
+    zoom=11.5,
+    height=650,
+    width=800,
+    mapbox_style="carto-positron",  # 깔끔한 지도 스타일
+    title="Ames Housing: 위치 기반 차고지 차량 대수 시각화"
+)
+
+fig.update_layout(
+
+    mapbox_center={"lat": 42.02601, "lon": -93.63975},
+    margin={"r":0,"t":30,"l":0,"b":0})
+
+# fig.show()
+
+```
+
+
+
 
 :::
 
@@ -495,7 +514,7 @@ fig = px.scatter_mapbox(
     height=650,
     width=800,
     mapbox_style="carto-positron",  # 깔끔한 지도 스타일
-    title="Ames Housing: 위치 기반 집값 시각화"
+    title="Ames Housing: 위치 기반 차고 면적 시각화"
 )
 
 fig.update_layout(
@@ -519,15 +538,15 @@ fig = px.scatter_mapbox(
     ames_df,
     lat="Latitude",
     lon="Longitude",
-    color="GarageCars",              # 색깔로 집값 표현
-    size="GarageCars",               # 점 크기로도 집값 표현
-    color_continuous_scale= "reds",  # 색상 팔레트
+    color="GarageFinish_Num",              # 색깔로 집값 표현
+    size="GarageFinish_Num",               # 점 크기로도 집값 표현
+    color_continuous_scale= "Reds",  # 색상 팔레트
     size_max=13,
     zoom=11.5,
     height=650,
     width=800,
     mapbox_style="carto-positron",  # 깔끔한 지도 스타일
-    title="Ames Housing: 위치 기반 집값 시각화"
+    title="Ames Housing: 위치 기반 차고지 마감 상태 시각화"
 )
 
 fig.update_layout(
@@ -537,8 +556,6 @@ fig.update_layout(
 
 ```
 
-row2
-
 
 
 ## Row 
@@ -546,9 +563,9 @@ row2
 
 
 
-# dropdown
+# 차고지 추천
 
-## Row {height=50%}
+## Row {height="30%"}
 
 ```{python}
 
@@ -612,14 +629,34 @@ _=fig.update_layout(
 fig.show()
 ```
 
+::: {.card title='프로젝트 소개'}
+
 <iframe src="step4_map.html" width="100%" height="600px" style="border:none;"></iframe>
 
+:::
+
+
+## Row {.tabset}
+### 다운로드
+
+<!-- ## Row {height="70%"} -->
+
+```{python}
+import pandas as pd
+from itables import show
 
 
 
-## Row {height=50%}
-hi
+codebook = ames_df.copy()
+components = codebook[['PID']+garage_cols+['SalePrice']]
 
+# Initialize the itables mode
+# init_notebook_mode(all_interactive=True)
+
+# Display the table with specific container style
+show(components, buttons=['copy', 'excel', 'pdf'], scrollY="1000px", scrollCollapse=True)
+
+```
 
 
 
@@ -628,7 +665,8 @@ hi
 
 
 ### Test{.tabset}
-#### 변수선택
+
+
 ```{python}
 #| echo: false
 #| output: false
@@ -643,7 +681,7 @@ from statsmodels.formula.api import ols
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 # 데이터 로드 및 전처리
-df = pd.read_csv('./data/ames.csv' )
+df = pd.read_csv('./data/ames.csv')
 
 garagefinish_mapping = {'Unf':1, 'Rfn':2, 'Fin':3}
 garagequal_mapping = {'Po':1, 'Fa':2, 'TA':3, 'Gd':4, 'Ex':5}
@@ -744,10 +782,10 @@ print(model.summary())
 #### 변수 선택
 | 변수명           | 선택 이유                           |
 |------------------|-------------------------------------------|
-| GarageYrBlt      | 차고 건축 시기로 공간 신선도 판단          |
+| GarageYrBlt      | 차고 건축 시기로 공간 노후 정도 판단          |
 | GarageCars       | 주차 가능 차량 수, 공간 규모 파악           |
 | GarageArea       | 차고 면적, 창업 공간 크기 반영         |
-| GarageFinish     | 차고 마감 상태, 공간 쾌적성 및 활용도        |
+| GarageFinish     | 차고 마감 상태, 공간 편의성 및 활용도        |
 | GarageQual       | 차고 품질, 내구성 및 유지관리 용이성         |
 | GarageCond       | 차고 상태, 시설 상태 반영                   |
 | LotArea          | 부지 면적, 확장성 및 주변 공간 평가          |
@@ -853,15 +891,15 @@ fig.update_layout(
             yanchor='top'
         )
     ],
-    width=800,
-    height=800,
+    width=1000,
+    height=1000,
     template='plotly_white'
 )
 
 # fig.show()
 ```
 
-- 변수별 상관관계 확인
+<!-- - 변수별 상관관계 확인 -->
 
 
 #### 다중공선성 진단
