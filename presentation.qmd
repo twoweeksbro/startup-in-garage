@@ -142,7 +142,6 @@ ames_df.shape
 
 
 
-
 ## Row {.tabset}
 #### GarageArea 이상치 제거
 ```{python}
@@ -212,31 +211,59 @@ sns.boxplot(y=ames_df['GarageArea'])
 ```
 
 
-# EDA & Preprocessing
 
 
+
+
+
+# 차고지 변수 히트맵
+
+## Row 
 
 ```{python}
-#| fig-width: 3
-#| fig-height: 5
-#| fig-align: center
-#| fig-cap: "상관관계 히트맵"
-import matplotlib.pyplot as plt
-import seaborn as sns
-# 상관관계 히트맵
-numeric_columns = ['SalePrice', 'GarageYrBlt', 'GarageCars', 'GarageArea']
+
+
+
+garagefinish_mapping = {
+    'Unf': 1,
+    'RFn': 2,
+    'Fin': 3
+}
+ames_df['GarageFinish_Num'] = ames_df['GarageFinish'].map(garagefinish_mapping)
+
+garagequal_mapping = {
+    'TA': 3,
+    'Fa': 2,
+    'Gd': 4,
+    'Po': 1,
+    'Ex': 5 
+}
+ames_df['GarageQual_Num'] = ames_df['GarageQual'].map(garagequal_mapping)
+
+garagecond_mapping = {
+    'TA': 3,
+    'Fa': 2,
+    'Gd': 4,
+    'Po': 1,
+    'Ex': 5 
+}
+ames_df['GarageCond_Num'] = ames_df['GarageCond'].map(garagecond_mapping)
+
+
+
+# 오직 Garage
+numeric_columns = ['GarageYrBlt', 'GarageCars', 
+                   'GarageArea','GarageFinish_Num','GarageQual_Num','GarageCond_Num']
 corr_matrix = ames_df[numeric_columns].corr()
-plt.figure(figsize=(5, 3))
-sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5)
-plt.title('Correlation Heatmap of Garage and Sale Price Variables')
+plt.figure(figsize=(7, 6))
+sns.heatmap(corr_matrix, 
+            annot=True, 
+            cmap='coolwarm',  # 색상 반전: 빨강(+) 파랑(-)
+            fmt='.2f', 
+            linewidths=0.5, 
+            vmin=-1, vmax=1)  # 색상 범위 고정
+_=plt.title('Correlation Heatmap of Garage and Sale Price Variables')
 plt.show()
-```
-
-
-## Row 
-
-```{python}
-
 
 ```
 
@@ -244,43 +271,14 @@ plt.show()
 
 ## Row 
 
-<!-- ::: {.card title="test"} -->
-## 위치 기반 GarageArea 시각화
 ```{python}
 
 # 전처리 
 # ames_df_clean = ames_df.dropna(subset=garage_cols)
 
-
 import plotly.express as px
 
-# GarageArea
-# Plotly scatter_mapbox 시각화
-fig = px.scatter_mapbox(
-    ames_df,
-    lat="Latitude",
-    lon="Longitude",
-    color="GarageArea",              # 색깔로 집값 표현
-    size="GarageArea",               # 점 크기로도 집값 표현
-    color_continuous_scale= "blues",  # 색상 팔레트
-    size_max=13,
-    zoom=11.5,
-    height=650,
-    width=800,
-    mapbox_style="carto-positron",  # 깔끔한 지도 스타일
-    title="Ames Housing: 위치 기반 집값 시각화"
-)
-
-fig.update_layout(
-
-    mapbox_center={"lat": 42.02601, "lon": -93.63975},
-    margin={"r":0,"t":30,"l":0,"b":0})
-
-# fig.show()
-
 ```
-
-<!-- ::: -->
 
 
 ## Row
@@ -317,7 +315,7 @@ fig = px.pie(
     names='GarageType',
     values='Count',
     hole=0.4,
-    title='Distribution of Garage Types (Donut Chart)'
+    title='차고지 종류 (Donut Chart)'
 )
 _=fig.update_traces(
     textinfo='percent+label',
@@ -346,7 +344,7 @@ fig = px.pie(garagefinish_counts,
              names='GarageFinish', 
              values='Count', 
              hole=0.4, 
-             title='Distribution of Garage Finish Types')
+             title='차고지 마감 수준')
 _=fig.update_layout(
     showlegend=True,
     width=700,
@@ -369,7 +367,7 @@ fig = px.pie(
     names='GarageQual',
     values='Count',
     hole=0.4,
-    title='Distribution of GarageQual (Donut Chart)'
+    title='차고지 품질 (Donut Chart)'
 )
 _=fig.update_traces(textinfo='percent+label',
     marker=dict(line=dict(color='white', width=2)),
@@ -394,7 +392,7 @@ fig = px.pie(
     names='GarageCond',
     values='Count',
     hole=0.4,
-    title='Distribution of Garage Condition (Donut Chart)'
+    title='차고지 상태 (Donut Chart)'
 )
 _=fig.update_traces(
     textinfo='percent+label',
@@ -426,7 +424,7 @@ fig = px.line(
     yearly_avg_area_df,
     x='GarageYrBlt',
     y='AvgGarageArea',
-    title='년도별 평균 차고지 면적',
+    title='연도별 평균 차고지 면적',
     markers=True
 )
 _=fig.update_traces(line=dict(color='firebrick'))  # 선 색깔 설정
@@ -451,7 +449,7 @@ fig = px.line(
     yearly_avg_df,
     x='GarageYrBlt',
     y='AvgGarageCars',
-    title='년도별 차고지 차량 대수',
+    title='연도별 차고지 차량 대수',
     markers=True
 )
 _=fig.update_traces(line=dict(color='green'))  # 선 색깔 설정
@@ -555,30 +553,6 @@ row2
 ```{python}
 
 
-garagefinish_mapping = {
-    'Unf': 1,
-    'RFn': 2,
-    'Fin': 3
-}
-ames_df['GarageFinish_Num'] = ames_df['GarageFinish'].map(garagefinish_mapping)
-
-garagequal_mapping = {
-    'TA': 3,
-    'Fa': 2,
-    'Gd': 4,
-    'Po': 1,
-    'Ex': 5 
-}
-ames_df['GarageQual_Num'] = ames_df['GarageQual'].map(garagequal_mapping)
-
-garagecond_mapping = {
-    'TA': 3,
-    'Fa': 2,
-    'Gd': 4,
-    'Po': 1,
-    'Ex': 5 
-}
-ames_df['GarageCond_Num'] = ames_df['GarageCond'].map(garagecond_mapping)
 
 
 import plotly.graph_objects as go
